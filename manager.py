@@ -1,3 +1,5 @@
+from __future__ import division
+
 import sys
 import os
 
@@ -58,7 +60,7 @@ class MainWindow(QtGui.QMainWindow):
         layout = QtGui.QHBoxLayout()
         layout.addWidget(self.imageList)
 
-        self.imageViewer = QtGui.QLabel()
+        self.imageViewer = QtGui.QGraphicsView()
         layout.addWidget(self.imageViewer)
 
         centralWidget = QtGui.QWidget()
@@ -81,7 +83,17 @@ class MainWindow(QtGui.QMainWindow):
         self.imageList.setModel(self.imageModel)
 
     def itemClicked(self, index):
-        self.imageViewer.setPixmap(self.imageModel.getPixmap(index))
+        scene = QtGui.QGraphicsScene()
+        pixmap = self.imageModel.getPixmap(index)
+        scene.addPixmap(pixmap)
+        self.imageViewer.setScene(scene)
+
+        scale = min(self.imageViewer.width() / pixmap.width(),
+                    self.imageViewer.height() / pixmap.height())
+
+        transform = QtGui.QTransform()
+        transform.scale(scale, scale)
+        self.imageViewer.setTransform(transform)
 
 
 if __name__ == '__main__':

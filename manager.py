@@ -32,6 +32,9 @@ class ImageModel(QtCore.QAbstractListModel):
                                                                                  QtCore.Qt.KeepAspectRatio,
                                                                                  QtCore.Qt.SmoothTransformation))
 
+    def getPixmap(self, index):
+        return self.pixmaps[self.imageNames[index.row()]]
+
     def rowCount(self, parent):
         if parent.isValid():
             return 0
@@ -49,11 +52,22 @@ class MainWindow(QtGui.QMainWindow):
         self.imageList.setResizeMode(QtGui.QListView.Adjust)
         self.imageList.setIconSize(QtCore.QSize(100, 100))
         self.imageList.setGridSize(QtCore.QSize(200, 100))
-        
-        self.setCentralWidget(self.imageList)
+        self.imageList.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
+        self.imageList.clicked.connect(self.itemClicked)
+
+        layout = QtGui.QHBoxLayout()
+        layout.addWidget(self.imageList)
+
+        self.imageViewer = QtGui.QLabel()
+        layout.addWidget(self.imageViewer)
+
+        centralWidget = QtGui.QWidget()
+        centralWidget.setLayout(layout)
+
+        self.setCentralWidget(centralWidget)
 
         self.openAct = QtGui.QAction("&Open", self, triggered=self.newDirectory)
-        
+
         self.fileMenu = QtGui.QMenu("&File", self)
         self.fileMenu.addAction(self.openAct)
         self.menuBar().addMenu(self.fileMenu)
@@ -66,7 +80,9 @@ class MainWindow(QtGui.QMainWindow):
         self.imageModel = ImageModel(directory)
         self.imageList.setModel(self.imageModel)
 
-        
+    def itemClicked(self, index):
+        self.imageViewer.setPixmap(self.imageModel.getPixmap(index))
+
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)

@@ -29,10 +29,7 @@ class ImageModel(QtCore.QAbstractListModel):
         if role == QtCore.Qt.DisplayRole:
             return self.imageNames[index.row()]
         elif role == QtCore.Qt.DecorationRole:
-            return QtGui.QIcon(self.pixmaps[self.imageNames[index.row()]].scaled(400,
-                                                                                 400,
-                                                                                 QtCore.Qt.KeepAspectRatio,
-                                                                                 QtCore.Qt.SmoothTransformation))
+            return QtGui.QIcon(self.pixmaps[self.imageNames[index.row()]])
 
     def getPixmap(self, index):
         return self.pixmaps[self.imageNames[index.row()]]

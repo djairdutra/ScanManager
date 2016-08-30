@@ -5,11 +5,14 @@ import os
 
 from PySide import QtCore, QtGui
 
+from fpdf import FPDF
+
 
 class ImageModel(QtCore.QAbstractListModel):
     def __init__(self, directory, parent=None):
         super(ImageModel, self).__init__(parent)
 
+        self.directory = directory
         self.imageNames = sorted(name
                                  for name in os.listdir(directory)
                                  if os.path.isfile(os.path.join(directory, name))
@@ -30,6 +33,12 @@ class ImageModel(QtCore.QAbstractListModel):
             return self.imageNames[index.row()]
         elif role == QtCore.Qt.DecorationRole:
             return QtGui.QIcon(self.pixmaps[self.imageNames[index.row()]])
+
+    def fileName(self, index):
+        if not index.isValid():
+            return None
+
+        return os.path.join(self.directory, self.imageNames[index.row()])
 
     def getPixmap(self, index):
         return self.pixmaps[self.imageNames[index.row()]]
@@ -65,11 +74,18 @@ class MainWindow(QtGui.QMainWindow):
 
         self.setCentralWidget(centralWidget)
 
-        self.openAct = QtGui.QAction("&Open", self, triggered=self.newDirectory)
+        self.openAction = QtGui.QAction("&Open", self, triggered=self.newDirectory)
 
         self.fileMenu = QtGui.QMenu("&File", self)
-        self.fileMenu.addAction(self.openAct)
+        self.fileMenu.addAction(self.openAction)
         self.menuBar().addMenu(self.fileMenu)
+
+        self.mergeAction = QtGui.QAction("Merge", self, triggered=self.mergeSelected)
+
+        toolBar = QtGui.QToolBar()
+        toolBar.addAction(self.mergeAction)
+        self.toolBar = self.addToolBar("Page actions")
+        self.toolBar.addAction(self.mergeAction)
 
     def newDirectory(self):
         directory = QtGui.QFileDialog.getExistingDirectory(self,
@@ -91,6 +107,26 @@ class MainWindow(QtGui.QMainWindow):
         transform = QtGui.QTransform()
         transform.scale(scale, scale)
         self.imageViewer.setTransform(transform)
+
+    def mergeSelected(self):
+        selectionModel = self.imageList.selectionModel()
+        selectedIndexes = self.imageList.selectionModel().selectedIndexes()
+        fileNames = [self.imageModel.fileName(index)
+                     for index in selectedIndexes]
+        print fileNames
+
+        pdf = FPDF()
+
+        for fileName in fileNames:
+            pdf.add_page()
+            pdf.image(fileName, w=pdf.w, h=pdf.h, x=0, y=0)
+
+        saveName, _ = QtGui.QFileDialog.getSaveFileName(self,
+                                                        "Save PDF as",
+                                                        os.path.expanduser("~"),
+                                                        "*.pdf")
+
+        pdf.output(saveName)
 
 
 if __name__ == '__main__':

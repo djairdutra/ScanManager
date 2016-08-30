@@ -10,10 +10,10 @@ class ImageModel(QtCore.QAbstractListModel):
     def __init__(self, directory, parent=None):
         super(ImageModel, self).__init__(parent)
 
-        self.imageNames = [name
-                           for name in os.listdir(directory)
-                           if os.path.isfile(os.path.join(directory, name))
-                           and name.endswith('.JPG')]
+        self.imageNames = sorted(name
+                                 for name in os.listdir(directory)
+                                 if os.path.isfile(os.path.join(directory, name))
+                                 and name.endswith('.JPG'))
         self.pixmaps = {}
 
         for imageName in self.imageNames:

@@ -7,21 +7,28 @@ from PySide import QtCore, QtGui
 
 from fpdf import FPDF
 
+# This module uses camel-cased names, following the Qt convention
+# pylint:disable=invalid-name
+
 
 class ImageModel(QtCore.QAbstractListModel):
     def __init__(self, directory, parent=None):
         super(ImageModel, self).__init__(parent)
 
         self.directory = directory
+        self.refresh()
+
+    def refresh(self):
+        """Re-read the list of files from the directory"""
         self.imageNames = sorted(name
-                                 for name in os.listdir(directory)
-                                 if os.path.isfile(os.path.join(directory, name))
+                                 for name in os.listdir(self.directory)
+                                 if os.path.isfile(os.path.join(self.directory, name))
                                  and name.endswith('.JPG'))
         self.pixmaps = {}
 
         for imageName in self.imageNames:
             pixmap = QtGui.QPixmap()
-            if not pixmap.load(os.path.join(directory, imageName)):
+            if not pixmap.load(os.path.join(self.directory, imageName)):
                 raise Exception("Couldn't load image %s" % imageName)
             self.pixmaps[imageName] = pixmap
 
@@ -80,12 +87,17 @@ class MainWindow(QtGui.QMainWindow):
         self.fileMenu.addAction(self.openAction)
         self.menuBar().addMenu(self.fileMenu)
 
-        self.mergeAction = QtGui.QAction("Merge", self, triggered=self.mergeSelected)
+        self.mergeAction = QtGui.QAction("Merge",
+                                         self,
+                                         triggered=self.mergeSelected)
+        self.deleteAction = QtGui.QAction("Delete",
+                                          self,
+                                          triggered=self.deleteSelected)
 
         toolBar = QtGui.QToolBar()
-        toolBar.addAction(self.mergeAction)
         self.toolBar = self.addToolBar("Page actions")
         self.toolBar.addAction(self.mergeAction)
+        self.toolBar.addAction(self.deleteAction)
 
     def newDirectory(self):
         directory = QtGui.QFileDialog.getExistingDirectory(self,
@@ -108,16 +120,18 @@ class MainWindow(QtGui.QMainWindow):
         transform.scale(scale, scale)
         self.imageViewer.setTransform(transform)
 
-    def mergeSelected(self):
+    def _getSelectedFileNames(self):
+        # Awkward handling of the return value from selectionModel(),
+        # because of a bug in PySide
         selectionModel = self.imageList.selectionModel()
         selectedIndexes = self.imageList.selectionModel().selectedIndexes()
-        fileNames = [self.imageModel.fileName(index)
-                     for index in selectedIndexes]
-        print fileNames
+        return [self.imageModel.fileName(index)
+                for index in selectedIndexes]
 
+    def mergeSelected(self):
         pdf = FPDF()
 
-        for fileName in fileNames:
+        for fileName in self._getSelectedFileNames():
             pdf.add_page()
             pdf.image(fileName, w=pdf.w, h=pdf.h, x=0, y=0)
 
@@ -127,6 +141,13 @@ class MainWindow(QtGui.QMainWindow):
                                                         "*.pdf")
 
         pdf.output(saveName)
+
+    def deleteSelected(self):
+        for fileName in self._getSelectedFileNames():
+            os.remove(fileName)
+
+        self.imageModel.refresh()
+        self.imageList.reset()
 
 
 if __name__ == '__main__':

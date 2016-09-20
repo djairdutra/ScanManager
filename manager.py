@@ -61,6 +61,8 @@ class MainWindow(QtGui.QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
 
+        self.setWindowIcon(QtGui.QIcon("scan_manager/images/scanner.svg"))
+
         self.imageList = QtGui.QListView()
         self.imageList.setFlow(QtGui.QListView.LeftToRight)
         self.imageList.setWrapping(True)
@@ -87,15 +89,17 @@ class MainWindow(QtGui.QMainWindow):
         self.fileMenu.addAction(self.openAction)
         self.menuBar().addMenu(self.fileMenu)
 
-        self.mergeAction = QtGui.QAction("Merge",
+        self.mergeAction = QtGui.QAction(QtGui.QIcon("scan_manager/images/stapler.svg"),
+                                         "Staple",
                                          self,
                                          triggered=self.mergeSelected)
-        self.deleteAction = QtGui.QAction("Delete",
+        self.deleteAction = QtGui.QAction(QtGui.QIcon("scan_manager/images/trash_can.svg"),
+                                          "Delete",
                                           self,
                                           triggered=self.deleteSelected)
 
-        toolBar = QtGui.QToolBar()
         self.toolBar = self.addToolBar("Page actions")
+        self.toolBar.setIconSize(QtCore.QSize(40, 40))
         self.toolBar.addAction(self.mergeAction)
         self.toolBar.addAction(self.deleteAction)
 

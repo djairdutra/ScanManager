@@ -1,15 +1,17 @@
 from __future__ import division
 
-import sys
 import os
 
 from PySide import QtCore, QtGui
 
 from fpdf import FPDF
 
+
 # This module uses camel-cased names, following the Qt convention
 # pylint:disable=invalid-name
 
+# Pylint can't see Qt class members
+# pylint:disable=no-member
 
 class ImageModel(QtCore.QAbstractListModel):
     def __init__(self, directory, parent=None):
@@ -152,10 +154,3 @@ class MainWindow(QtGui.QMainWindow):
 
         self.imageModel.refresh()
         self.imageList.reset()
-
-
-if __name__ == '__main__':
-    app = QtGui.QApplication(sys.argv)
-    main_window = MainWindow()
-    main_window.show()
-    sys.exit(app.exec_())
